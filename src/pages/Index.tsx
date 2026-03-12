@@ -91,7 +91,7 @@ const Index = () => {
 
         {/* Secondary modules */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {QUICK_LINKS.filter((l) => !l.primary).map(
+          {QUICK_LINKS.filter((l) => !("primary" in l && l.primary)).map(
             ({ title, description, icon: Icon, path }) => (
               <Link
                 key={path}
