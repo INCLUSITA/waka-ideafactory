@@ -74,7 +74,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async create(payload: Omit<T, "id" | "created_at" | "updated_at">): Promise<T> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .insert(payload)
       .select()
       .single();
