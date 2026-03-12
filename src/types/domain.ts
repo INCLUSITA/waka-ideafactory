@@ -1,9 +1,8 @@
 /**
  * WAKA Ideas Factory — Core Domain Types
- * 
- * Designed for multi-tenancy, governance, and traceability.
- * These types define the contracts that services and UI consume.
- * Backend schemas (Supabase tables) should mirror these structures.
+ *
+ * Mirrors the Supabase schema exactly.
+ * Primary mental model: Applications > Assets > Ideas (secondary).
  */
 
 // ─── Base ────────────────────────────────────────────────────
@@ -27,33 +26,26 @@ export interface Auditable {
 
 // ─── Tenancy ─────────────────────────────────────────────────
 
+export type TenantStatus = "active" | "suspended" | "archived";
+
 export interface Tenant extends Timestamped {
   id: UUID;
   name: string;
   slug: string;
-  logo_url?: string;
-  settings: TenantSettings;
-  status: "active" | "suspended" | "archived";
-}
-
-export interface TenantSettings {
-  features_enabled: string[];
-  max_members: number;
-  branding?: {
-    primary_color?: string;
-    logo_url?: string;
-  };
+  logo_url?: string | null;
+  status: TenantStatus;
+  settings: Record<string, unknown>;
 }
 
 // ─── Users & Roles ───────────────────────────────────────────
 
-export type AppRole = "admin" | "editor" | "viewer" | "owner";
+export type AppRole = "owner" | "admin" | "editor" | "viewer";
 
 export interface UserProfile extends Timestamped {
   id: UUID;
   email: string;
   display_name: string;
-  avatar_url?: string;
+  avatar_url?: string | null;
 }
 
 export interface TenantMembership extends Timestamped {
@@ -63,42 +55,24 @@ export interface TenantMembership extends Timestamped {
   role: AppRole;
 }
 
-// ─── Ideas Pipeline ──────────────────────────────────────────
+// ─── Applications (primary operational entity) ───────────────
 
-export type IdeaStatus =
+export type ApplicationStatus =
   | "draft"
-  | "submitted"
-  | "evaluating"
-  | "approved"
-  | "in_progress"
-  | "validated"
-  | "archived"
-  | "rejected";
+  | "active"
+  | "paused"
+  | "deprecated"
+  | "archived";
 
-export type IdeaPriority = "low" | "medium" | "high" | "critical";
-
-export interface Idea extends Timestamped, TenantScoped, Auditable {
+export interface Application extends Timestamped, TenantScoped, Auditable {
   id: UUID;
-  title: string;
+  name: string;
   description: string;
-  status: IdeaStatus;
-  priority: IdeaPriority;
-  tags: string[];
-  category?: string;
-  attachments: UUID[];
-  // AXIOM-lite readiness: scoring dimensions
-  scores?: IdeaScores;
+  status: ApplicationStatus;
+  metadata: Record<string, unknown>;
 }
 
-export interface IdeaScores {
-  impact: number;       // 1-10
-  feasibility: number;  // 1-10
-  alignment: number;    // 1-10
-  urgency: number;      // 1-10
-  composite?: number;   // calculated
-}
-
-// ─── Assets (NEXUS-lite readiness) ───────────────────────────
+// ─── Assets ──────────────────────────────────────────────────
 
 export type AssetType =
   | "template"
@@ -112,6 +86,7 @@ export type AssetStatus = "draft" | "published" | "deprecated";
 
 export interface Asset extends Timestamped, TenantScoped, Auditable {
   id: UUID;
+  application_id?: UUID | null;
   name: string;
   type: AssetType;
   status: AssetStatus;
@@ -119,7 +94,40 @@ export interface Asset extends Timestamped, TenantScoped, Auditable {
   version: string;
   tags: string[];
   metadata: Record<string, unknown>;
-  source_idea_id?: UUID; // traceability back to idea
+}
+
+// ─── Ideas (secondary, within operational context) ───────────
+
+export type IdeaStatus =
+  | "draft"
+  | "submitted"
+  | "evaluating"
+  | "approved"
+  | "in_progress"
+  | "validated"
+  | "archived"
+  | "rejected";
+
+export type IdeaPriority = "low" | "medium" | "high" | "critical";
+
+export interface IdeaScores {
+  impact: number;
+  feasibility: number;
+  alignment: number;
+  urgency: number;
+  composite?: number;
+}
+
+export interface Idea extends Timestamped, TenantScoped, Auditable {
+  id: UUID;
+  application_id?: UUID | null;
+  title: string;
+  description: string;
+  status: IdeaStatus;
+  priority: IdeaPriority;
+  tags: string[];
+  category?: string | null;
+  scores?: IdeaScores | null;
 }
 
 // ─── Audit Log ───────────────────────────────────────────────
@@ -135,11 +143,11 @@ export type AuditAction =
 
 export interface AuditEntry extends TenantScoped {
   id: UUID;
-  timestamp: ISODateTime;
+  created_at: ISODateTime;
   actor_id: UUID;
-  entity_type: "idea" | "asset" | "tenant" | "membership";
+  entity_type: string;
   entity_id: UUID;
   action: AuditAction;
-  changes?: Record<string, { from: unknown; to: unknown }>;
-  metadata?: Record<string, unknown>;
+  changes?: Record<string, unknown> | null;
+  metadata?: Record<string, unknown> | null;
 }
