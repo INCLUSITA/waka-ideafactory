@@ -17,12 +17,12 @@ export function AppLayout({ children }: AppLayoutProps) {
       <main className="flex-1 flex flex-col min-h-screen">
         <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card">
           <h2 className="font-display text-sm font-medium text-muted-foreground tracking-wide uppercase">
-            Ideas Factory
+            WAKA Platform
           </h2>
           <div className="flex items-center gap-3">
             {user && (
               <span className="text-xs text-muted-foreground">
-                {user.email}
+                {user.user_metadata?.display_name || user.email}
               </span>
             )}
             <Button
