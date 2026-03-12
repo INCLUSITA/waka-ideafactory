@@ -8,6 +8,7 @@ import AuthPage from "./pages/AuthPage";
 import ResetPasswordPage from "./pages/ResetPasswordPage";
 import Index from "./pages/Index";
 import ApplicationsPage from "./pages/ApplicationsPage";
+import ApplicationDetailPage from "./pages/ApplicationDetailPage";
 import AssetsPage from "./pages/AssetsPage";
 import PatternsPage from "./pages/PatternsPage";
 import IdeasPage from "./pages/IdeasPage";
@@ -34,7 +35,7 @@ const App = () => (
 
           {/* Protected — Operations */}
           <Route path="/applications" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
-          <Route path="/applications/:id" element={<ProtectedRoute><ApplicationsPage /></ProtectedRoute>} />
+          <Route path="/applications/:id" element={<ProtectedRoute><ApplicationDetailPage /></ProtectedRoute>} />
 
           {/* Protected — Workspace */}
           <Route path="/assets" element={<ProtectedRoute><AssetsPage /></ProtectedRoute>} />
