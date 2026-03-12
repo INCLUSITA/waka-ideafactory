@@ -34,7 +34,7 @@ export class BaseRepository<T extends { id: string }> {
   constructor(protected readonly table: TableName) {}
 
   async findAll(filters?: QueryFilters): Promise<T[]> {
-    let query = (supabase.from(this.table) as any).select("*");
+    let query = (supabase.from as any)(this.table).select("*");
 
     if (filters?.tenant_id) {
       query = query.eq("tenant_id", filters.tenant_id);
