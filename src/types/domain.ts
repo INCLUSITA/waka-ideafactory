@@ -130,6 +130,68 @@ export interface Idea extends Timestamped, TenantScoped, Auditable {
   scores?: IdeaScores | null;
 }
 
+// ─── Workspace Records ───────────────────────────────────────
+
+export type WorkspaceRecordType =
+  | "session"
+  | "change_request"
+  | "decision"
+  | "exploration"
+  | "review";
+
+export type WorkspaceRecordStatus =
+  | "open"
+  | "in_progress"
+  | "resolved"
+  | "archived";
+
+export interface WorkspaceRecord extends Timestamped, TenantScoped, Auditable {
+  id: UUID;
+  application_id?: UUID | null;
+  type: WorkspaceRecordType;
+  status: WorkspaceRecordStatus;
+  title: string;
+  description: string;
+  outcome?: string | null;
+  metadata: Record<string, unknown>;
+}
+
+// ─── Pattern Docs ────────────────────────────────────────────
+
+export type PatternDocStatus =
+  | "draft"
+  | "review"
+  | "approved"
+  | "superseded"
+  | "archived";
+
+export interface PatternDoc extends Timestamped, TenantScoped, Auditable {
+  id: UUID;
+  application_id?: UUID | null;
+  title: string;
+  content: string;
+  status: PatternDocStatus;
+  version: string;
+  tags: string[];
+  category?: string | null;
+  metadata: Record<string, unknown>;
+}
+
+// ─── Feedback Events ─────────────────────────────────────────
+
+export type FeedbackSentiment = "positive" | "neutral" | "negative" | "mixed";
+
+export interface FeedbackEvent extends TenantScoped {
+  id: UUID;
+  created_at: ISODateTime;
+  entity_type: string;
+  entity_id: UUID;
+  sentiment: FeedbackSentiment;
+  comment: string;
+  metadata?: Record<string, unknown> | null;
+  created_by: UUID;
+}
+
 // ─── Audit Log ───────────────────────────────────────────────
 
 export type AuditAction =

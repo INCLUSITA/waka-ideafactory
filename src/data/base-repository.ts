@@ -11,6 +11,9 @@ export type TableName =
   | "applications"
   | "assets"
   | "ideas"
+  | "workspace_records"
+  | "pattern_docs"
+  | "feedback_events"
   | "audit_log";
 
 export interface QueryFilters {
