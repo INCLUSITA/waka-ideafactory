@@ -83,7 +83,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async update(id: string, payload: Partial<T>): Promise<T> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .update(payload)
       .eq("id", id)
       .select()
