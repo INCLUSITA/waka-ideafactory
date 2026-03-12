@@ -8,6 +8,7 @@ import {
   Shield,
   Settings,
   Lightbulb,
+  Building2,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
@@ -37,7 +38,11 @@ const NAV_SECTIONS = [
   },
 ] as const;
 
-export function AppSidebar() {
+interface AppSidebarProps {
+  tenantName?: string;
+}
+
+export function AppSidebar({ tenantName }: AppSidebarProps) {
   const location = useLocation();
 
   return (
@@ -58,6 +63,18 @@ export function AppSidebar() {
           </div>
         </Link>
       </div>
+
+      {/* Tenant context */}
+      {tenantName && (
+        <div className="px-4 py-2.5 border-b border-sidebar-border">
+          <div className="flex items-center gap-2 px-2 py-1.5 rounded-md bg-sidebar-accent">
+            <Building2 className="w-3.5 h-3.5 text-sidebar-primary shrink-0" />
+            <span className="text-[11px] font-medium text-sidebar-accent-foreground truncate">
+              {tenantName}
+            </span>
+          </div>
+        </div>
+      )}
 
       {/* Navigation */}
       <nav className="flex-1 py-3 px-3 space-y-5 overflow-y-auto">
@@ -96,7 +113,7 @@ export function AppSidebar() {
       {/* Footer */}
       <div className="px-5 py-4 border-t border-sidebar-border">
         <p className="text-[10px] text-sidebar-foreground/50 font-body tracking-wider uppercase">
-          WAKA Platform v0.2
+          WAKA Platform v0.3
         </p>
       </div>
     </aside>

@@ -1,8 +1,9 @@
 import { ReactNode } from "react";
 import { useAuth } from "@/hooks/useAuth";
+import { useTenantContext } from "@/hooks/useTenantContext";
 import { AppSidebar } from "@/components/AppSidebar";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { LogOut, Building2 } from "lucide-react";
 
 interface AppLayoutProps {
   children: ReactNode;
@@ -10,16 +11,23 @@ interface AppLayoutProps {
 
 export function AppLayout({ children }: AppLayoutProps) {
   const { user, signOut } = useAuth();
+  const { tenant } = useTenantContext();
 
   return (
     <div className="flex min-h-screen bg-background">
-      <AppSidebar />
+      <AppSidebar tenantName={tenant?.name} />
       <main className="flex-1 flex flex-col min-h-screen">
         <header className="h-14 border-b border-border flex items-center justify-between px-6 bg-card">
           <h2 className="font-display text-sm font-medium text-muted-foreground tracking-wide uppercase">
             WAKA Platform
           </h2>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
+            {tenant && (
+              <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-muted border border-border">
+                <Building2 className="w-3 h-3 text-primary" />
+                <span className="text-xs font-medium text-foreground">{tenant.name}</span>
+              </div>
+            )}
             {user && (
               <span className="text-xs text-muted-foreground">
                 {user.user_metadata?.display_name || user.email}
