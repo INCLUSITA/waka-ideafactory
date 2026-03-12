@@ -171,6 +171,50 @@ export type Database = {
           },
         ]
       }
+      feedback_events: {
+        Row: {
+          comment: string | null
+          created_at: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json
+          sentiment: string
+          tenant_id: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string
+          created_by: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json
+          sentiment?: string
+          tenant_id: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string
+          created_by?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json
+          sentiment?: string
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feedback_events_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       ideas: {
         Row: {
           application_id: string | null
@@ -230,6 +274,69 @@ export type Database = {
           },
           {
             foreignKeyName: "ideas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      pattern_docs: {
+        Row: {
+          application_id: string
+          content: string
+          created_at: string
+          created_by: string
+          id: string
+          metadata: Json
+          status: string
+          tags: string[]
+          tenant_id: string
+          title: string
+          updated_at: string
+          updated_by: string
+          version: string
+        }
+        Insert: {
+          application_id: string
+          content?: string
+          created_at?: string
+          created_by: string
+          id?: string
+          metadata?: Json
+          status?: string
+          tags?: string[]
+          tenant_id: string
+          title: string
+          updated_at?: string
+          updated_by: string
+          version?: string
+        }
+        Update: {
+          application_id?: string
+          content?: string
+          created_at?: string
+          created_by?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          tags?: string[]
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "pattern_docs_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "pattern_docs_tenant_id_fkey"
             columns: ["tenant_id"]
             isOneToOne: false
             referencedRelation: "tenants"
@@ -331,6 +438,66 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      workspace_records: {
+        Row: {
+          application_id: string
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          metadata: Json
+          status: string
+          tenant_id: string
+          title: string
+          type: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          tenant_id: string
+          title: string
+          type?: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          metadata?: Json
+          status?: string
+          tenant_id?: string
+          title?: string
+          type?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "workspace_records_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "workspace_records_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {
