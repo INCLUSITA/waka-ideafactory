@@ -65,7 +65,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async findById(id: string): Promise<T | null> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .select("*")
       .eq("id", id)
       .maybeSingle();
