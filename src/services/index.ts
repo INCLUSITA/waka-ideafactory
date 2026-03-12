@@ -1,11 +1,21 @@
 /**
  * Service layer barrel.
- * Each service encapsulates data access for a domain entity.
- * Services talk to Supabase; components never call Supabase directly.
+ * Services orchestrate domain logic on top of repositories.
+ * Components consume services; services consume repositories.
+ *
+ * Pending implementation as features are built:
+ * - ApplicationsService: CRUD + lifecycle transitions
+ * - AssetsService: versioning + publish flow
+ * - IdeasService: scoring + status pipeline
+ * - GovernanceService: audit trail queries
  */
 
-// Services will be added as features are implemented:
-// export { ideasService } from "./ideas.service";
-// export { assetsService } from "./assets.service";
-// export { tenantsService } from "./tenants.service";
-// export { auditService } from "./audit.service";
+export {
+  tenantsRepo,
+  profilesRepo,
+  membershipsRepo,
+  applicationsRepo,
+  assetsRepo,
+  ideasRepo,
+  auditRepo,
+} from "@/data";
