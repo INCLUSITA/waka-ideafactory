@@ -93,7 +93,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async remove(id: string): Promise<void> {
-    const { error } = await (supabase.from(this.table) as any)
+    const { error } = await (supabase.from as any)(this.table)
       .delete()
       .eq("id", id);
     if (error) throw error;
