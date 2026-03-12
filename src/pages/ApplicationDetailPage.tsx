@@ -19,6 +19,7 @@ import {
 import { ArrowLeft, AppWindow, ClipboardList, Box, FileText, MessageSquare, History, Plus } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { getValidTransitions, STATUS_LABELS, type ApplicationStatus } from "@/lib/lifecycle";
 
 const STATUS_COLORS: Record<string, string> = {
   draft: "bg-muted text-muted-foreground",
@@ -33,6 +34,10 @@ const STATUS_COLORS: Record<string, string> = {
   approved: "bg-[hsl(var(--waka-success))]/15 text-[hsl(var(--waka-success))]",
   superseded: "bg-muted text-muted-foreground",
   published: "bg-[hsl(var(--waka-success))]/15 text-[hsl(var(--waka-success))]",
+  created: "bg-primary/15 text-primary",
+  updated: "bg-[hsl(var(--waka-info))]/15 text-[hsl(var(--waka-info))]",
+  deleted: "bg-destructive/15 text-destructive",
+  status_changed: "bg-[hsl(var(--waka-warning))]/15 text-[hsl(var(--waka-warning))]",
 };
 
 function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message: string }) {
@@ -79,6 +84,7 @@ export default function ApplicationDetailPage() {
   const [patterns, setPatterns] = useState<PatternDoc[]>([]);
   const [feedback, setFeedback] = useState<FeedbackEvent[]>([]);
   const [audit, setAudit] = useState<AuditEntry[]>([]);
+  const [transitioning, setTransitioning] = useState(false);
 
   // Create dialogs
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
@@ -93,7 +99,7 @@ export default function ApplicationDetailPage() {
   const [newAssetType, setNewAssetType] = useState("document");
   const [newAssetDesc, setNewAssetDesc] = useState("");
 
-  useEffect(() => {
+  const loadData = () => {
     if (!id) return;
     setLoading(true);
 
@@ -107,16 +113,41 @@ export default function ApplicationDetailPage() {
     ])
       .then(([appData, allRecords, allAssets, allPatterns, allFeedback, allAudit]) => {
         setApp(appData);
-        // Filter by application_id where applicable
         setRecords(allRecords.filter((r) => r.application_id === id));
         setAssets(allAssets.filter((a) => a.application_id === id));
         setPatterns(allPatterns.filter((p) => p.application_id === id));
         setFeedback(allFeedback.filter((f) => f.entity_type === "application" && f.entity_id === id));
-        setAudit(allAudit.filter((a) => (a.entity_type === "application" && a.entity_id === id)));
+        setAudit(allAudit.filter((a) => (a.entity_type === "applications" && a.entity_id === id) ||
+          (a.entity_type === "workspace_records" && allRecords.some(r => r.id === a.entity_id && r.application_id === id)) ||
+          (a.entity_type === "assets" && allAssets.some(as => as.id === a.entity_id && as.application_id === id))
+        ));
       })
       .catch(() => toast.error("Error cargando aplicación"))
       .finally(() => setLoading(false));
-  }, [id]);
+  };
+
+  useEffect(() => { loadData(); }, [id]);
+
+  const handleTransition = async (newStatus: ApplicationStatus) => {
+    if (!app || !user) return;
+    setTransitioning(true);
+    try {
+      const updated = await applicationsRepo.update(app.id, {
+        status: newStatus,
+        updated_by: user.id,
+      } as any);
+      setApp(updated);
+      toast.success(`Estado cambiado a ${STATUS_LABELS[newStatus]}`);
+      // Reload audit to show new entry
+      auditRepo.findAll({ order_by: "created_at", limit: 50 }).then((allAudit) => {
+        setAudit(allAudit.filter((a) => a.entity_type === "applications" && a.entity_id === app.id));
+      });
+    } catch {
+      toast.error("Error cambiando estado");
+    } finally {
+      setTransitioning(false);
+    }
+  };
 
   const handleCreateRecord = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -201,6 +232,8 @@ export default function ApplicationDetailPage() {
     );
   }
 
+  const validTransitions = getValidTransitions(app.status as ApplicationStatus);
+
   const TAB_COUNTS = [
     { key: "records", label: "Workspace", count: records.length, icon: ClipboardList },
     { key: "assets", label: "Assets", count: assets.length, icon: Box },
@@ -212,7 +245,7 @@ export default function ApplicationDetailPage() {
   return (
     <AppLayout>
       <div className="max-w-5xl mx-auto">
-        {/* Breadcrumb + Header */}
+        {/* Breadcrumb */}
         <Link
           to="/applications"
           className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-primary transition-colors mb-4"
@@ -221,6 +254,7 @@ export default function ApplicationDetailPage() {
           Applications
         </Link>
 
+        {/* Header with lifecycle controls */}
         <div className="flex items-start justify-between mb-6">
           <div>
             <div className="flex items-center gap-3 mb-1">
@@ -236,6 +270,24 @@ export default function ApplicationDetailPage() {
               </p>
             )}
           </div>
+
+          {/* Lifecycle transitions */}
+          {validTransitions.length > 0 && (
+            <div className="flex items-center gap-2">
+              {validTransitions.map((target) => (
+                <Button
+                  key={target}
+                  size="sm"
+                  variant={target === "active" ? "default" : "outline"}
+                  disabled={transitioning}
+                  onClick={() => handleTransition(target)}
+                  className="text-xs"
+                >
+                  → {STATUS_LABELS[target]}
+                </Button>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Tabs */}
