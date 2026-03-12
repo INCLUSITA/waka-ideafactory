@@ -7,4 +7,7 @@ export { membershipsRepo } from "./repositories/memberships";
 export { applicationsRepo } from "./repositories/applications";
 export { assetsRepo } from "./repositories/assets";
 export { ideasRepo } from "./repositories/ideas";
+export { workspaceRecordsRepo } from "./repositories/workspace-records";
+export { patternDocsRepo } from "./repositories/pattern-docs";
+export { feedbackEventsRepo } from "./repositories/feedback-events";
 export { auditRepo } from "./repositories/audit";

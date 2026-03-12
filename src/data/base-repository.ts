@@ -11,6 +11,9 @@ export type TableName =
   | "applications"
   | "assets"
   | "ideas"
+  | "workspace_records"
+  | "pattern_docs"
+  | "feedback_events"
   | "audit_log";
 
 export interface QueryFilters {
@@ -31,7 +34,7 @@ export class BaseRepository<T extends { id: string }> {
   constructor(protected readonly table: TableName) {}
 
   async findAll(filters?: QueryFilters): Promise<T[]> {
-    let query = (supabase.from(this.table) as any).select("*");
+    let query = (supabase.from as any)(this.table).select("*");
 
     if (filters?.tenant_id) {
       query = query.eq("tenant_id", filters.tenant_id);
@@ -62,7 +65,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async findById(id: string): Promise<T | null> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .select("*")
       .eq("id", id)
       .maybeSingle();
@@ -71,7 +74,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async create(payload: Omit<T, "id" | "created_at" | "updated_at">): Promise<T> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .insert(payload)
       .select()
       .single();
@@ -80,7 +83,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async update(id: string, payload: Partial<T>): Promise<T> {
-    const { data, error } = await (supabase.from(this.table) as any)
+    const { data, error } = await (supabase.from as any)(this.table)
       .update(payload)
       .eq("id", id)
       .select()
@@ -90,7 +93,7 @@ export class BaseRepository<T extends { id: string }> {
   }
 
   async remove(id: string): Promise<void> {
-    const { error } = await (supabase.from(this.table) as any)
+    const { error } = await (supabase.from as any)(this.table)
       .delete()
       .eq("id", id);
     if (error) throw error;

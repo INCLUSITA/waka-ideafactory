@@ -21,6 +21,13 @@ export type {
   IdeaPriority,
   Idea,
   IdeaScores,
+  WorkspaceRecordType,
+  WorkspaceRecordStatus,
+  WorkspaceRecord,
+  PatternDocStatus,
+  PatternDoc,
+  FeedbackSentiment,
+  FeedbackEvent,
   AuditAction,
   AuditEntry,
 } from "./domain";
