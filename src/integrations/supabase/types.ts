@@ -14,16 +14,378 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      applications: {
+        Row: {
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          metadata: Json
+          name: string
+          status: Database["public"]["Enums"]["application_status"]
+          tenant_id: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          metadata?: Json
+          name: string
+          status?: Database["public"]["Enums"]["application_status"]
+          tenant_id: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          status?: Database["public"]["Enums"]["application_status"]
+          tenant_id?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "applications_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      assets: {
+        Row: {
+          application_id: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          metadata: Json
+          name: string
+          status: Database["public"]["Enums"]["asset_status"]
+          tags: string[]
+          tenant_id: string
+          type: Database["public"]["Enums"]["asset_type"]
+          updated_at: string
+          updated_by: string
+          version: string
+        }
+        Insert: {
+          application_id?: string | null
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          metadata?: Json
+          name: string
+          status?: Database["public"]["Enums"]["asset_status"]
+          tags?: string[]
+          tenant_id: string
+          type?: Database["public"]["Enums"]["asset_type"]
+          updated_at?: string
+          updated_by: string
+          version?: string
+        }
+        Update: {
+          application_id?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          metadata?: Json
+          name?: string
+          status?: Database["public"]["Enums"]["asset_status"]
+          tags?: string[]
+          tenant_id?: string
+          type?: Database["public"]["Enums"]["asset_type"]
+          updated_at?: string
+          updated_by?: string
+          version?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "assets_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      audit_log: {
+        Row: {
+          action: Database["public"]["Enums"]["audit_action"]
+          actor_id: string
+          changes: Json | null
+          created_at: string
+          entity_id: string
+          entity_type: string
+          id: string
+          metadata: Json | null
+          tenant_id: string
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["audit_action"]
+          actor_id: string
+          changes?: Json | null
+          created_at?: string
+          entity_id: string
+          entity_type: string
+          id?: string
+          metadata?: Json | null
+          tenant_id: string
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["audit_action"]
+          actor_id?: string
+          changes?: Json | null
+          created_at?: string
+          entity_id?: string
+          entity_type?: string
+          id?: string
+          metadata?: Json | null
+          tenant_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "audit_log_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ideas: {
+        Row: {
+          application_id: string | null
+          category: string | null
+          created_at: string
+          created_by: string
+          description: string
+          id: string
+          priority: Database["public"]["Enums"]["idea_priority"]
+          scores: Json | null
+          status: Database["public"]["Enums"]["idea_status"]
+          tags: string[]
+          tenant_id: string
+          title: string
+          updated_at: string
+          updated_by: string
+        }
+        Insert: {
+          application_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["idea_priority"]
+          scores?: Json | null
+          status?: Database["public"]["Enums"]["idea_status"]
+          tags?: string[]
+          tenant_id: string
+          title: string
+          updated_at?: string
+          updated_by: string
+        }
+        Update: {
+          application_id?: string | null
+          category?: string | null
+          created_at?: string
+          created_by?: string
+          description?: string
+          id?: string
+          priority?: Database["public"]["Enums"]["idea_priority"]
+          scores?: Json | null
+          status?: Database["public"]["Enums"]["idea_status"]
+          tags?: string[]
+          tenant_id?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ideas_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "ideas_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string
+          email: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          email: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string
+          email?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      tenant_memberships: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          tenant_id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "tenant_memberships_tenant_id_fkey"
+            columns: ["tenant_id"]
+            isOneToOne: false
+            referencedRelation: "tenants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      tenants: {
+        Row: {
+          created_at: string
+          id: string
+          logo_url: string | null
+          name: string
+          settings: Json
+          slug: string
+          status: Database["public"]["Enums"]["tenant_status"]
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name: string
+          settings?: Json
+          slug: string
+          status?: Database["public"]["Enums"]["tenant_status"]
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          logo_url?: string | null
+          name?: string
+          settings?: Json
+          slug?: string
+          status?: Database["public"]["Enums"]["tenant_status"]
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_tenant_ids: { Args: { _user_id: string }; Returns: string[] }
+      has_tenant_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _tenant_id: string
+          _user_id: string
+        }
+        Returns: boolean
+      }
+      is_tenant_member: {
+        Args: { _tenant_id: string; _user_id: string }
+        Returns: boolean
+      }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "owner" | "admin" | "editor" | "viewer"
+      application_status:
+        | "draft"
+        | "active"
+        | "paused"
+        | "deprecated"
+        | "archived"
+      asset_status: "draft" | "published" | "deprecated"
+      asset_type:
+        | "template"
+        | "component"
+        | "document"
+        | "prompt"
+        | "workflow"
+        | "dataset"
+      audit_action:
+        | "created"
+        | "updated"
+        | "deleted"
+        | "status_changed"
+        | "role_changed"
+        | "scored"
+        | "published"
+      idea_priority: "low" | "medium" | "high" | "critical"
+      idea_status:
+        | "draft"
+        | "submitted"
+        | "evaluating"
+        | "approved"
+        | "in_progress"
+        | "validated"
+        | "archived"
+        | "rejected"
+      tenant_status: "active" | "suspended" | "archived"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +512,45 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["owner", "admin", "editor", "viewer"],
+      application_status: [
+        "draft",
+        "active",
+        "paused",
+        "deprecated",
+        "archived",
+      ],
+      asset_status: ["draft", "published", "deprecated"],
+      asset_type: [
+        "template",
+        "component",
+        "document",
+        "prompt",
+        "workflow",
+        "dataset",
+      ],
+      audit_action: [
+        "created",
+        "updated",
+        "deleted",
+        "status_changed",
+        "role_changed",
+        "scored",
+        "published",
+      ],
+      idea_priority: ["low", "medium", "high", "critical"],
+      idea_status: [
+        "draft",
+        "submitted",
+        "evaluating",
+        "approved",
+        "in_progress",
+        "validated",
+        "archived",
+        "rejected",
+      ],
+      tenant_status: ["active", "suspended", "archived"],
+    },
   },
 } as const
