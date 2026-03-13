@@ -145,6 +145,8 @@ export type WorkspaceRecordStatus =
   | "resolved"
   | "archived";
 
+export type WorkspaceRecordPriority = "low" | "medium" | "high" | "critical";
+
 export interface WorkspaceRecord extends Timestamped, TenantScoped, Auditable {
   id: UUID;
   application_id?: UUID | null;
@@ -153,6 +155,10 @@ export interface WorkspaceRecord extends Timestamped, TenantScoped, Auditable {
   title: string;
   description: string;
   outcome?: string | null;
+  owner_id?: UUID | null;
+  next_action: string;
+  priority: WorkspaceRecordPriority;
+  linked_asset_ids: UUID[];
   metadata: Record<string, unknown>;
 }
 
