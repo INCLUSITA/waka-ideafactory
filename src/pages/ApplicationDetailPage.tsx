@@ -151,10 +151,7 @@ export default function ApplicationDetailPage() {
       } as any);
       setApp(updated);
       toast.success(`Estado cambiado a ${STATUS_LABELS[newStatus]}`);
-      // Reload audit to show new entry
-      auditRepo.findAll({ order_by: "created_at", limit: 50 }).then((allAudit) => {
-        setAudit(allAudit.filter((a) => a.entity_type === "applications" && a.entity_id === app.id));
-      });
+      loadData();
     } catch {
       toast.error("Error cambiando estado");
     } finally {
