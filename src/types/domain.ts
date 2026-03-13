@@ -195,6 +195,7 @@ export interface FeedbackEvent extends TenantScoped {
   entity_id: UUID;
   sentiment: FeedbackSentiment;
   comment: string;
+  linked_asset_id?: UUID | null;
   metadata?: Record<string, unknown> | null;
   created_by: UUID;
 }
