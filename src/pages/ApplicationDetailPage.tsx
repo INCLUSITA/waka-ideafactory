@@ -102,6 +102,9 @@ export default function ApplicationDetailPage() {
   const [newPatternTitle, setNewPatternTitle] = useState("");
   const [newPatternContent, setNewPatternContent] = useState("");
   const [newPatternVersion, setNewPatternVersion] = useState("0.1.0");
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+  const [newFeedbackComment, setNewFeedbackComment] = useState("");
+  const [newFeedbackSentiment, setNewFeedbackSentiment] = useState("neutral");
 
   const loadData = () => {
     if (!id) return;
