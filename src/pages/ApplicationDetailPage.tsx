@@ -164,7 +164,7 @@ export default function ApplicationDetailPage() {
     if (!user || !app) return;
     setCreating(true);
     try {
-      const record = await workspaceRecordsRepo.create({
+      await workspaceRecordsRepo.create({
         title: newRecordTitle,
         description: newRecordDesc,
         type: newRecordType as any,
@@ -175,12 +175,12 @@ export default function ApplicationDetailPage() {
         updated_by: user.id,
         metadata: {},
       } as any);
-      setRecords((prev) => [record, ...prev]);
       setNewRecordTitle("");
       setNewRecordDesc("");
       setNewRecordType("session");
       setRecordDialogOpen(false);
       toast.success("Workspace record creado");
+      loadData();
     } catch {
       toast.error("Error creando record");
     } finally {
