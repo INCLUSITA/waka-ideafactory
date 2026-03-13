@@ -93,6 +93,7 @@ export interface Asset extends Timestamped, TenantScoped, Auditable {
   description: string;
   version: string;
   tags: string[];
+  linked_pattern_id?: UUID | null;
   metadata: Record<string, unknown>;
 }
 
