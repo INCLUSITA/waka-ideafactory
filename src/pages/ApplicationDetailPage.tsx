@@ -16,7 +16,7 @@ import {
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from "@/components/ui/select";
-import { ArrowLeft, AppWindow, ClipboardList, Box, FileText, MessageSquare, History, Plus } from "lucide-react";
+import { ArrowLeft, AppWindow, ClipboardList, Box, FileText, MessageSquare, History, Plus, Activity, Clock, AlertTriangle } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { getValidTransitions, STATUS_LABELS, type ApplicationStatus } from "@/lib/lifecycle";
@@ -38,6 +38,18 @@ const STATUS_COLORS: Record<string, string> = {
   updated: "bg-[hsl(var(--waka-info))]/15 text-[hsl(var(--waka-info))]",
   deleted: "bg-destructive/15 text-destructive",
   status_changed: "bg-[hsl(var(--waka-warning))]/15 text-[hsl(var(--waka-warning))]",
+  positive: "bg-[hsl(var(--waka-success))]/15 text-[hsl(var(--waka-success))]",
+  neutral: "bg-muted text-muted-foreground",
+  negative: "bg-destructive/15 text-destructive",
+  mixed: "bg-[hsl(var(--waka-warning))]/15 text-[hsl(var(--waka-warning))]",
+  low: "bg-muted text-muted-foreground",
+  medium: "bg-[hsl(var(--waka-info))]/15 text-[hsl(var(--waka-info))]",
+  high: "bg-[hsl(var(--waka-warning))]/15 text-[hsl(var(--waka-warning))]",
+  critical: "bg-destructive/15 text-destructive",
+};
+
+const PRIORITY_ICONS: Record<string, string> = {
+  low: "↓", medium: "→", high: "↑", critical: "⚠",
 };
 
 function EmptyState({ icon: Icon, message }: { icon: React.ElementType; message: string }) {
@@ -57,7 +69,7 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function ItemRow({ title, subtitle, status, date }: { title: string; subtitle?: string; status: string; date: string }) {
+function ItemRow({ title, subtitle, status, date, extra }: { title: string; subtitle?: string; status: string; date: string; extra?: React.ReactNode }) {
   return (
     <div className="flex items-center justify-between py-3 px-4 border-b border-border last:border-0 hover:bg-muted/30 transition-colors">
       <div className="min-w-0 flex-1">
@@ -65,10 +77,57 @@ function ItemRow({ title, subtitle, status, date }: { title: string; subtitle?: 
         {subtitle && <p className="text-xs text-muted-foreground truncate mt-0.5">{subtitle}</p>}
       </div>
       <div className="flex items-center gap-3 shrink-0 ml-4">
+        {extra}
         <StatusBadge status={status} />
         <span className="text-[10px] text-muted-foreground/60 w-20 text-right">
           {new Date(date).toLocaleDateString("es")}
         </span>
+      </div>
+    </div>
+  );
+}
+
+function MetricCard({ label, value, icon: Icon }: { label: string; value: string | number; icon: React.ElementType }) {
+  return (
+    <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-3">
+      <Icon className="w-4 h-4 text-muted-foreground" />
+      <div>
+        <p className="text-lg font-bold text-foreground leading-none">{value}</p>
+        <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">{label}</p>
+      </div>
+    </div>
+  );
+}
+
+function TimelineEvent({ entry }: { entry: AuditEntry }) {
+  const actionLabels: Record<string, string> = {
+    created: "Creado",
+    updated: "Actualizado",
+    deleted: "Eliminado",
+    status_changed: "Estado cambiado",
+    role_changed: "Rol cambiado",
+    scored: "Evaluado",
+    published: "Publicado",
+  };
+  const entityLabels: Record<string, string> = {
+    applications: "Application",
+    workspace_records: "Record",
+    assets: "Asset",
+    pattern_docs: "Pattern Doc",
+    feedback_events: "Feedback",
+  };
+  return (
+    <div className="flex items-start gap-3 py-2">
+      <div className="mt-1 w-2 h-2 rounded-full bg-primary shrink-0" />
+      <div className="min-w-0 flex-1">
+        <p className="text-xs text-foreground">
+          <span className="font-semibold">{actionLabels[entry.action] || entry.action}</span>
+          {" "}
+          <span className="text-muted-foreground">{entityLabels[entry.entity_type] || entry.entity_type}</span>
+        </p>
+        <p className="text-[10px] text-muted-foreground/60">
+          {new Date(entry.created_at).toLocaleString("es", { day: "2-digit", month: "short", hour: "2-digit", minute: "2-digit" })}
+        </p>
       </div>
     </div>
   );
@@ -89,22 +148,32 @@ export default function ApplicationDetailPage() {
   // Create dialogs
   const [recordDialogOpen, setRecordDialogOpen] = useState(false);
   const [assetDialogOpen, setAssetDialogOpen] = useState(false);
+  const [patternDialogOpen, setPatternDialogOpen] = useState(false);
+  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
   const [creating, setCreating] = useState(false);
 
-  // Form state
+  // Record form
   const [newRecordTitle, setNewRecordTitle] = useState("");
   const [newRecordType, setNewRecordType] = useState("session");
   const [newRecordDesc, setNewRecordDesc] = useState("");
+  const [newRecordPriority, setNewRecordPriority] = useState("medium");
+  const [newRecordNextAction, setNewRecordNextAction] = useState("");
+
+  // Asset form
   const [newAssetName, setNewAssetName] = useState("");
   const [newAssetType, setNewAssetType] = useState("document");
   const [newAssetDesc, setNewAssetDesc] = useState("");
-  const [patternDialogOpen, setPatternDialogOpen] = useState(false);
+  const [newAssetLinkedPattern, setNewAssetLinkedPattern] = useState("");
+
+  // Pattern form
   const [newPatternTitle, setNewPatternTitle] = useState("");
   const [newPatternContent, setNewPatternContent] = useState("");
   const [newPatternVersion, setNewPatternVersion] = useState("0.1.0");
-  const [feedbackDialogOpen, setFeedbackDialogOpen] = useState(false);
+
+  // Feedback form
   const [newFeedbackComment, setNewFeedbackComment] = useState("");
   const [newFeedbackSentiment, setNewFeedbackSentiment] = useState("neutral");
+  const [newFeedbackLinkedAsset, setNewFeedbackLinkedAsset] = useState("");
 
   const loadData = (showLoader = false) => {
     if (!id) return;
@@ -169,6 +238,10 @@ export default function ApplicationDetailPage() {
         description: newRecordDesc,
         type: newRecordType as any,
         status: "open",
+        priority: newRecordPriority,
+        next_action: newRecordNextAction,
+        owner_id: user.id,
+        linked_asset_ids: [],
         application_id: app.id,
         tenant_id: app.tenant_id,
         created_by: user.id,
@@ -178,6 +251,8 @@ export default function ApplicationDetailPage() {
       setNewRecordTitle("");
       setNewRecordDesc("");
       setNewRecordType("session");
+      setNewRecordPriority("medium");
+      setNewRecordNextAction("");
       setRecordDialogOpen(false);
       toast.success("Workspace record creado");
       loadData();
@@ -204,16 +279,76 @@ export default function ApplicationDetailPage() {
         updated_by: user.id,
         version: "0.1.0",
         tags: [],
+        linked_pattern_id: newAssetLinkedPattern || null,
         metadata: {},
       } as any);
       setNewAssetName("");
       setNewAssetDesc("");
       setNewAssetType("document");
+      setNewAssetLinkedPattern("");
       setAssetDialogOpen(false);
       toast.success("Asset creado");
       loadData();
     } catch {
       toast.error("Error creando asset");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCreatePattern = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !app) return;
+    setCreating(true);
+    try {
+      await patternDocsRepo.create({
+        title: newPatternTitle,
+        content: newPatternContent,
+        version: newPatternVersion,
+        status: "draft",
+        application_id: app.id,
+        tenant_id: app.tenant_id,
+        created_by: user.id,
+        updated_by: user.id,
+        tags: [],
+        metadata: {},
+      } as any);
+      setNewPatternTitle("");
+      setNewPatternContent("");
+      setNewPatternVersion("0.1.0");
+      setPatternDialogOpen(false);
+      toast.success("Pattern Doc creado");
+      loadData();
+    } catch {
+      toast.error("Error creando pattern doc");
+    } finally {
+      setCreating(false);
+    }
+  };
+
+  const handleCreateFeedback = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!user || !app) return;
+    setCreating(true);
+    try {
+      await feedbackEventsRepo.create({
+        entity_type: "application",
+        entity_id: app.id,
+        comment: newFeedbackComment,
+        sentiment: newFeedbackSentiment,
+        linked_asset_id: newFeedbackLinkedAsset || null,
+        tenant_id: app.tenant_id,
+        created_by: user.id,
+        metadata: {},
+      } as any);
+      setNewFeedbackComment("");
+      setNewFeedbackSentiment("neutral");
+      setNewFeedbackLinkedAsset("");
+      setFeedbackDialogOpen(false);
+      toast.success("Feedback registrado");
+      loadData();
+    } catch {
+      toast.error("Error registrando feedback");
     } finally {
       setCreating(false);
     }
@@ -243,6 +378,7 @@ export default function ApplicationDetailPage() {
   }
 
   const validTransitions = getValidTransitions(app.status as ApplicationStatus);
+  const lastActivity = audit.length > 0 ? new Date(audit[0].created_at) : new Date(app.updated_at);
 
   const TAB_COUNTS = [
     { key: "records", label: "Workspace", count: records.length, icon: ClipboardList },
@@ -265,7 +401,7 @@ export default function ApplicationDetailPage() {
         </Link>
 
         {/* Header with lifecycle controls */}
-        <div className="flex items-start justify-between mb-6">
+        <div className="flex items-start justify-between mb-4">
           <div>
             <div className="flex items-center gap-3 mb-1">
               <AppWindow className="w-5 h-5 text-primary" />
@@ -299,6 +435,39 @@ export default function ApplicationDetailPage() {
             </div>
           )}
         </div>
+
+        {/* Quick Metrics */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-6">
+          <MetricCard label="Records" value={records.length} icon={ClipboardList} />
+          <MetricCard label="Assets" value={assets.length} icon={Box} />
+          <MetricCard label="Patterns" value={patterns.length} icon={FileText} />
+          <MetricCard label="Feedback" value={feedback.length} icon={MessageSquare} />
+          <MetricCard label="Audit" value={audit.length} icon={History} />
+          <div className="flex items-center gap-3 bg-card border border-border rounded-lg px-4 py-3">
+            <Clock className="w-4 h-4 text-muted-foreground" />
+            <div>
+              <p className="text-xs font-bold text-foreground leading-none">
+                {lastActivity.toLocaleDateString("es", { day: "2-digit", month: "short" })}
+              </p>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider mt-0.5">Última actividad</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Activity Timeline */}
+        {audit.length > 0 && (
+          <div className="mb-6 bg-card border border-border rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Activity className="w-4 h-4 text-primary" />
+              <h3 className="font-display text-sm font-semibold text-foreground">Actividad Reciente</h3>
+            </div>
+            <div className="max-h-40 overflow-y-auto space-y-0.5">
+              {audit.slice(0, 8).map((entry) => (
+                <TimelineEvent key={entry.id} entry={entry} />
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Tabs */}
         <Tabs defaultValue="records" className="w-full">
@@ -337,18 +506,36 @@ export default function ApplicationDetailPage() {
                       <Label>Título</Label>
                       <Input value={newRecordTitle} onChange={(e) => setNewRecordTitle(e.target.value)} required placeholder="e.g. Sprint Review Q1" />
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                      <div className="space-y-2">
+                        <Label>Tipo</Label>
+                        <Select value={newRecordType} onValueChange={setNewRecordType}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="session">Session</SelectItem>
+                            <SelectItem value="change_request">Change Request</SelectItem>
+                            <SelectItem value="decision">Decision</SelectItem>
+                            <SelectItem value="exploration">Exploration</SelectItem>
+                            <SelectItem value="review">Review</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label>Prioridad</Label>
+                        <Select value={newRecordPriority} onValueChange={setNewRecordPriority}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="low">↓ Baja</SelectItem>
+                            <SelectItem value="medium">→ Media</SelectItem>
+                            <SelectItem value="high">↑ Alta</SelectItem>
+                            <SelectItem value="critical">⚠ Crítica</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
                     <div className="space-y-2">
-                      <Label>Tipo</Label>
-                      <Select value={newRecordType} onValueChange={setNewRecordType}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="session">Session</SelectItem>
-                          <SelectItem value="change_request">Change Request</SelectItem>
-                          <SelectItem value="decision">Decision</SelectItem>
-                          <SelectItem value="exploration">Exploration</SelectItem>
-                          <SelectItem value="review">Review</SelectItem>
-                        </SelectContent>
-                      </Select>
+                      <Label>Próxima acción</Label>
+                      <Input value={newRecordNextAction} onChange={(e) => setNewRecordNextAction(e.target.value)} placeholder="e.g. Revisar con equipo el lunes" />
                     </div>
                     <div className="space-y-2">
                       <Label>Descripción</Label>
@@ -366,7 +553,18 @@ export default function ApplicationDetailPage() {
             ) : (
               <div className="border border-border rounded-lg bg-card overflow-hidden">
                 {records.map((r) => (
-                  <ItemRow key={r.id} title={r.title} subtitle={r.type.replace("_", " ")} status={r.status} date={r.created_at} />
+                  <ItemRow
+                    key={r.id}
+                    title={r.title}
+                    subtitle={`${r.type.replace("_", " ")}${r.next_action ? ` · Next: ${r.next_action}` : ""}`}
+                    status={r.status}
+                    date={r.created_at}
+                    extra={
+                      <Badge variant="secondary" className={cn("text-[10px]", STATUS_COLORS[r.priority] || "")}>
+                        {PRIORITY_ICONS[r.priority] || ""} {r.priority}
+                      </Badge>
+                    }
+                  />
                 ))}
               </div>
             )}
@@ -403,6 +601,20 @@ export default function ApplicationDetailPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {patterns.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Vincular Pattern Doc (opcional)</Label>
+                        <Select value={newAssetLinkedPattern} onValueChange={setNewAssetLinkedPattern}>
+                          <SelectTrigger><SelectValue placeholder="Sin vinculación" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Ninguno</SelectItem>
+                            {patterns.map(p => (
+                              <SelectItem key={p.id} value={p.id}>{p.title} (v{p.version})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label>Descripción</Label>
                       <Textarea value={newAssetDesc} onChange={(e) => setNewAssetDesc(e.target.value)} rows={3} placeholder="Describe el asset..." />
@@ -418,9 +630,18 @@ export default function ApplicationDetailPage() {
               <EmptyState icon={Box} message="No hay assets para esta aplicación." />
             ) : (
               <div className="border border-border rounded-lg bg-card overflow-hidden">
-                {assets.map((a) => (
-                  <ItemRow key={a.id} title={a.name} subtitle={`${a.type} · v${a.version}`} status={a.status} date={a.created_at} />
-                ))}
+                {assets.map((a) => {
+                  const linkedPattern = a.linked_pattern_id ? patterns.find(p => p.id === a.linked_pattern_id) : null;
+                  return (
+                    <ItemRow
+                      key={a.id}
+                      title={a.name}
+                      subtitle={`${a.type} · v${a.version}${linkedPattern ? ` · 🔗 ${linkedPattern.title}` : ""}`}
+                      status={a.status}
+                      date={a.created_at}
+                    />
+                  );
+                })}
               </div>
             )}
           </TabsContent>
@@ -437,35 +658,7 @@ export default function ApplicationDetailPage() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Crear Pattern Doc</DialogTitle></DialogHeader>
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!user || !app) return;
-                    setCreating(true);
-                    try {
-                      await patternDocsRepo.create({
-                        title: newPatternTitle,
-                        content: newPatternContent,
-                        version: newPatternVersion,
-                        status: "draft",
-                        application_id: app.id,
-                        tenant_id: app.tenant_id,
-                        created_by: user.id,
-                        updated_by: user.id,
-                        tags: [],
-                        metadata: {},
-                      } as any);
-                      setNewPatternTitle("");
-                      setNewPatternContent("");
-                      setNewPatternVersion("0.1.0");
-                      setPatternDialogOpen(false);
-                      toast.success("Pattern Doc creado");
-                      loadData();
-                    } catch {
-                      toast.error("Error creando pattern doc");
-                    } finally {
-                      setCreating(false);
-                    }
-                  }} className="space-y-4 mt-2">
+                  <form onSubmit={handleCreatePattern} className="space-y-4 mt-2">
                     <div className="space-y-2">
                       <Label>Título</Label>
                       <Input value={newPatternTitle} onChange={(e) => setNewPatternTitle(e.target.value)} required placeholder="e.g. Auth Flow Pattern" />
@@ -508,31 +701,7 @@ export default function ApplicationDetailPage() {
                 </DialogTrigger>
                 <DialogContent>
                   <DialogHeader><DialogTitle>Registrar Feedback</DialogTitle></DialogHeader>
-                  <form onSubmit={async (e) => {
-                    e.preventDefault();
-                    if (!user || !app) return;
-                    setCreating(true);
-                    try {
-                      await feedbackEventsRepo.create({
-                        entity_type: "application",
-                        entity_id: app.id,
-                        comment: newFeedbackComment,
-                        sentiment: newFeedbackSentiment,
-                        tenant_id: app.tenant_id,
-                        created_by: user.id,
-                        metadata: {},
-                      } as any);
-                      setNewFeedbackComment("");
-                      setNewFeedbackSentiment("neutral");
-                      setFeedbackDialogOpen(false);
-                      toast.success("Feedback registrado");
-                      loadData();
-                    } catch {
-                      toast.error("Error registrando feedback");
-                    } finally {
-                      setCreating(false);
-                    }
-                  }} className="space-y-4 mt-2">
+                  <form onSubmit={handleCreateFeedback} className="space-y-4 mt-2">
                     <div className="space-y-2">
                       <Label>Sentiment</Label>
                       <Select value={newFeedbackSentiment} onValueChange={setNewFeedbackSentiment}>
@@ -545,6 +714,20 @@ export default function ApplicationDetailPage() {
                         </SelectContent>
                       </Select>
                     </div>
+                    {assets.length > 0 && (
+                      <div className="space-y-2">
+                        <Label>Vincular Asset (opcional)</Label>
+                        <Select value={newFeedbackLinkedAsset} onValueChange={setNewFeedbackLinkedAsset}>
+                          <SelectTrigger><SelectValue placeholder="Application general" /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="">Application general</SelectItem>
+                            {assets.map(a => (
+                              <SelectItem key={a.id} value={a.id}>{a.name} ({a.type})</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
                     <div className="space-y-2">
                       <Label>Comentario</Label>
                       <Textarea value={newFeedbackComment} onChange={(e) => setNewFeedbackComment(e.target.value)} rows={3} placeholder="Describe el feedback..." />
@@ -560,9 +743,18 @@ export default function ApplicationDetailPage() {
               <EmptyState icon={MessageSquare} message="No hay feedback para esta aplicación." />
             ) : (
               <div className="border border-border rounded-lg bg-card overflow-hidden">
-                {feedback.map((f) => (
-                  <ItemRow key={f.id} title={f.comment || "Sin comentario"} subtitle={f.sentiment} status={f.sentiment} date={f.created_at} />
-                ))}
+                {feedback.map((f) => {
+                  const linkedAsset = f.linked_asset_id ? assets.find(a => a.id === f.linked_asset_id) : null;
+                  return (
+                    <ItemRow
+                      key={f.id}
+                      title={f.comment || "Sin comentario"}
+                      subtitle={`${f.sentiment}${linkedAsset ? ` · 🔗 ${linkedAsset.name}` : ""}`}
+                      status={f.sentiment}
+                      date={f.created_at}
+                    />
+                  );
+                })}
               </div>
             )}
           </TabsContent>
