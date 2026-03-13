@@ -139,7 +139,7 @@ export default function ApplicationDetailPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => { loadData(true); }, [id]);
 
   const handleTransition = async (newStatus: ApplicationStatus) => {
     if (!app || !user) return;
