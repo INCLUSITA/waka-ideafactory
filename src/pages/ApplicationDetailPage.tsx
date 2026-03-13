@@ -513,7 +513,7 @@ export default function ApplicationDetailPage() {
                     if (!user || !app) return;
                     setCreating(true);
                     try {
-                      const fb = await feedbackEventsRepo.create({
+                      await feedbackEventsRepo.create({
                         entity_type: "application",
                         entity_id: app.id,
                         comment: newFeedbackComment,
@@ -522,11 +522,11 @@ export default function ApplicationDetailPage() {
                         created_by: user.id,
                         metadata: {},
                       } as any);
-                      setFeedback((prev) => [fb, ...prev]);
                       setNewFeedbackComment("");
                       setNewFeedbackSentiment("neutral");
                       setFeedbackDialogOpen(false);
                       toast.success("Feedback registrado");
+                      loadData();
                     } catch {
                       toast.error("Error registrando feedback");
                     } finally {
