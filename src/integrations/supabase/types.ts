@@ -68,6 +68,7 @@ export type Database = {
           created_by: string
           description: string
           id: string
+          linked_pattern_id: string | null
           metadata: Json
           name: string
           status: Database["public"]["Enums"]["asset_status"]
@@ -84,6 +85,7 @@ export type Database = {
           created_by: string
           description?: string
           id?: string
+          linked_pattern_id?: string | null
           metadata?: Json
           name: string
           status?: Database["public"]["Enums"]["asset_status"]
@@ -100,6 +102,7 @@ export type Database = {
           created_by?: string
           description?: string
           id?: string
+          linked_pattern_id?: string | null
           metadata?: Json
           name?: string
           status?: Database["public"]["Enums"]["asset_status"]
@@ -116,6 +119,13 @@ export type Database = {
             columns: ["application_id"]
             isOneToOne: false
             referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "assets_linked_pattern_id_fkey"
+            columns: ["linked_pattern_id"]
+            isOneToOne: false
+            referencedRelation: "pattern_docs"
             referencedColumns: ["id"]
           },
           {
@@ -179,6 +189,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id: string
+          linked_asset_id: string | null
           metadata: Json
           sentiment: string
           tenant_id: string
@@ -190,6 +201,7 @@ export type Database = {
           entity_id: string
           entity_type: string
           id?: string
+          linked_asset_id?: string | null
           metadata?: Json
           sentiment?: string
           tenant_id: string
@@ -201,11 +213,19 @@ export type Database = {
           entity_id?: string
           entity_type?: string
           id?: string
+          linked_asset_id?: string | null
           metadata?: Json
           sentiment?: string
           tenant_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "feedback_events_linked_asset_id_fkey"
+            columns: ["linked_asset_id"]
+            isOneToOne: false
+            referencedRelation: "assets"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "feedback_events_tenant_id_fkey"
             columns: ["tenant_id"]
@@ -446,7 +466,11 @@ export type Database = {
           created_by: string
           description: string
           id: string
+          linked_asset_ids: string[]
           metadata: Json
+          next_action: string
+          owner_id: string | null
+          priority: string
           status: string
           tenant_id: string
           title: string
@@ -460,7 +484,11 @@ export type Database = {
           created_by: string
           description?: string
           id?: string
+          linked_asset_ids?: string[]
           metadata?: Json
+          next_action?: string
+          owner_id?: string | null
+          priority?: string
           status?: string
           tenant_id: string
           title: string
@@ -474,7 +502,11 @@ export type Database = {
           created_by?: string
           description?: string
           id?: string
+          linked_asset_ids?: string[]
           metadata?: Json
+          next_action?: string
+          owner_id?: string | null
+          priority?: string
           status?: string
           tenant_id?: string
           title?: string
