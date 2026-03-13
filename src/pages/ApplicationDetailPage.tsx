@@ -442,7 +442,7 @@ export default function ApplicationDetailPage() {
                     if (!user || !app) return;
                     setCreating(true);
                     try {
-                      const doc = await patternDocsRepo.create({
+                      await patternDocsRepo.create({
                         title: newPatternTitle,
                         content: newPatternContent,
                         version: newPatternVersion,
@@ -454,12 +454,12 @@ export default function ApplicationDetailPage() {
                         tags: [],
                         metadata: {},
                       } as any);
-                      setPatterns((prev) => [doc, ...prev]);
                       setNewPatternTitle("");
                       setNewPatternContent("");
                       setNewPatternVersion("0.1.0");
                       setPatternDialogOpen(false);
                       toast.success("Pattern Doc creado");
+                      loadData();
                     } catch {
                       toast.error("Error creando pattern doc");
                     } finally {
