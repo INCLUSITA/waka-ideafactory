@@ -106,9 +106,9 @@ export default function ApplicationDetailPage() {
   const [newFeedbackComment, setNewFeedbackComment] = useState("");
   const [newFeedbackSentiment, setNewFeedbackSentiment] = useState("neutral");
 
-  const loadData = () => {
+  const loadData = (showLoader = false) => {
     if (!id) return;
-    setLoading(true);
+    if (showLoader) setLoading(true);
 
     Promise.all([
       applicationsRepo.findById(id),
@@ -139,7 +139,7 @@ export default function ApplicationDetailPage() {
       .finally(() => setLoading(false));
   };
 
-  useEffect(() => { loadData(); }, [id]);
+  useEffect(() => { loadData(true); }, [id]);
 
   const handleTransition = async (newStatus: ApplicationStatus) => {
     if (!app || !user) return;
@@ -151,10 +151,7 @@ export default function ApplicationDetailPage() {
       } as any);
       setApp(updated);
       toast.success(`Estado cambiado a ${STATUS_LABELS[newStatus]}`);
-      // Reload audit to show new entry
-      auditRepo.findAll({ order_by: "created_at", limit: 50 }).then((allAudit) => {
-        setAudit(allAudit.filter((a) => a.entity_type === "applications" && a.entity_id === app.id));
-      });
+      loadData();
     } catch {
       toast.error("Error cambiando estado");
     } finally {
@@ -167,7 +164,7 @@ export default function ApplicationDetailPage() {
     if (!user || !app) return;
     setCreating(true);
     try {
-      const record = await workspaceRecordsRepo.create({
+      await workspaceRecordsRepo.create({
         title: newRecordTitle,
         description: newRecordDesc,
         type: newRecordType as any,
@@ -178,12 +175,12 @@ export default function ApplicationDetailPage() {
         updated_by: user.id,
         metadata: {},
       } as any);
-      setRecords((prev) => [record, ...prev]);
       setNewRecordTitle("");
       setNewRecordDesc("");
       setNewRecordType("session");
       setRecordDialogOpen(false);
       toast.success("Workspace record creado");
+      loadData();
     } catch {
       toast.error("Error creando record");
     } finally {
@@ -196,7 +193,7 @@ export default function ApplicationDetailPage() {
     if (!user || !app) return;
     setCreating(true);
     try {
-      const asset = await assetsRepo.create({
+      await assetsRepo.create({
         name: newAssetName,
         description: newAssetDesc,
         type: newAssetType as any,
@@ -209,12 +206,12 @@ export default function ApplicationDetailPage() {
         tags: [],
         metadata: {},
       } as any);
-      setAssets((prev) => [asset, ...prev]);
       setNewAssetName("");
       setNewAssetDesc("");
       setNewAssetType("document");
       setAssetDialogOpen(false);
       toast.success("Asset creado");
+      loadData();
     } catch {
       toast.error("Error creando asset");
     } finally {
@@ -445,7 +442,7 @@ export default function ApplicationDetailPage() {
                     if (!user || !app) return;
                     setCreating(true);
                     try {
-                      const doc = await patternDocsRepo.create({
+                      await patternDocsRepo.create({
                         title: newPatternTitle,
                         content: newPatternContent,
                         version: newPatternVersion,
@@ -457,12 +454,12 @@ export default function ApplicationDetailPage() {
                         tags: [],
                         metadata: {},
                       } as any);
-                      setPatterns((prev) => [doc, ...prev]);
                       setNewPatternTitle("");
                       setNewPatternContent("");
                       setNewPatternVersion("0.1.0");
                       setPatternDialogOpen(false);
                       toast.success("Pattern Doc creado");
+                      loadData();
                     } catch {
                       toast.error("Error creando pattern doc");
                     } finally {
@@ -516,7 +513,7 @@ export default function ApplicationDetailPage() {
                     if (!user || !app) return;
                     setCreating(true);
                     try {
-                      const fb = await feedbackEventsRepo.create({
+                      await feedbackEventsRepo.create({
                         entity_type: "application",
                         entity_id: app.id,
                         comment: newFeedbackComment,
@@ -525,11 +522,11 @@ export default function ApplicationDetailPage() {
                         created_by: user.id,
                         metadata: {},
                       } as any);
-                      setFeedback((prev) => [fb, ...prev]);
                       setNewFeedbackComment("");
                       setNewFeedbackSentiment("neutral");
                       setFeedbackDialogOpen(false);
                       toast.success("Feedback registrado");
+                      loadData();
                     } catch {
                       toast.error("Error registrando feedback");
                     } finally {
