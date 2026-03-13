@@ -98,6 +98,10 @@ export default function ApplicationDetailPage() {
   const [newAssetName, setNewAssetName] = useState("");
   const [newAssetType, setNewAssetType] = useState("document");
   const [newAssetDesc, setNewAssetDesc] = useState("");
+  const [patternDialogOpen, setPatternDialogOpen] = useState(false);
+  const [newPatternTitle, setNewPatternTitle] = useState("");
+  const [newPatternContent, setNewPatternContent] = useState("");
+  const [newPatternVersion, setNewPatternVersion] = useState("0.1.0");
 
   const loadData = () => {
     if (!id) return;
