@@ -193,7 +193,7 @@ export default function ApplicationDetailPage() {
     if (!user || !app) return;
     setCreating(true);
     try {
-      const asset = await assetsRepo.create({
+      await assetsRepo.create({
         name: newAssetName,
         description: newAssetDesc,
         type: newAssetType as any,
@@ -206,12 +206,12 @@ export default function ApplicationDetailPage() {
         tags: [],
         metadata: {},
       } as any);
-      setAssets((prev) => [asset, ...prev]);
       setNewAssetName("");
       setNewAssetDesc("");
       setNewAssetType("document");
       setAssetDialogOpen(false);
       toast.success("Asset creado");
+      loadData();
     } catch {
       toast.error("Error creando asset");
     } finally {
