@@ -98,6 +98,10 @@ export default function ApplicationDetailPage() {
   const [newAssetName, setNewAssetName] = useState("");
   const [newAssetType, setNewAssetType] = useState("document");
   const [newAssetDesc, setNewAssetDesc] = useState("");
+  const [patternDialogOpen, setPatternDialogOpen] = useState(false);
+  const [newPatternTitle, setNewPatternTitle] = useState("");
+  const [newPatternContent, setNewPatternContent] = useState("");
+  const [newPatternVersion, setNewPatternVersion] = useState("0.1.0");
 
   const loadData = () => {
     if (!id) return;
@@ -417,7 +421,64 @@ export default function ApplicationDetailPage() {
 
           {/* Pattern Docs */}
           <TabsContent value="patterns" className="mt-4">
-            <h3 className="font-display text-sm font-semibold text-foreground mb-3">Pattern Docs</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display text-sm font-semibold text-foreground">Pattern Docs</h3>
+              <Dialog open={patternDialogOpen} onOpenChange={setPatternDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                    <Plus className="w-3.5 h-3.5" /> Nuevo Pattern Doc
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Crear Pattern Doc</DialogTitle></DialogHeader>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!user || !app) return;
+                    setCreating(true);
+                    try {
+                      const doc = await patternDocsRepo.create({
+                        title: newPatternTitle,
+                        content: newPatternContent,
+                        version: newPatternVersion,
+                        status: "draft",
+                        application_id: app.id,
+                        tenant_id: app.tenant_id,
+                        created_by: user.id,
+                        updated_by: user.id,
+                        tags: [],
+                        metadata: {},
+                      } as any);
+                      setPatterns((prev) => [doc, ...prev]);
+                      setNewPatternTitle("");
+                      setNewPatternContent("");
+                      setNewPatternVersion("0.1.0");
+                      setPatternDialogOpen(false);
+                      toast.success("Pattern Doc creado");
+                    } catch {
+                      toast.error("Error creando pattern doc");
+                    } finally {
+                      setCreating(false);
+                    }
+                  }} className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                      <Label>Título</Label>
+                      <Input value={newPatternTitle} onChange={(e) => setNewPatternTitle(e.target.value)} required placeholder="e.g. Auth Flow Pattern" />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Contenido</Label>
+                      <Textarea value={newPatternContent} onChange={(e) => setNewPatternContent(e.target.value)} rows={5} placeholder="Describe el patrón, decisiones, rationale..." />
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Versión</Label>
+                      <Input value={newPatternVersion} onChange={(e) => setNewPatternVersion(e.target.value)} placeholder="0.1.0" />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={creating}>
+                      {creating ? "Creando..." : "Crear Pattern Doc"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
             {patterns.length === 0 ? (
               <EmptyState icon={FileText} message="No hay pattern docs para esta aplicación." />
             ) : (
