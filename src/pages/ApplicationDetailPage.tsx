@@ -501,7 +501,64 @@ export default function ApplicationDetailPage() {
 
           {/* Feedback */}
           <TabsContent value="feedback" className="mt-4">
-            <h3 className="font-display text-sm font-semibold text-foreground mb-3">Feedback</h3>
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="font-display text-sm font-semibold text-foreground">Feedback</h3>
+              <Dialog open={feedbackDialogOpen} onOpenChange={setFeedbackDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button size="sm" variant="outline" className="gap-1.5 text-xs">
+                    <Plus className="w-3.5 h-3.5" /> Nuevo Feedback
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader><DialogTitle>Registrar Feedback</DialogTitle></DialogHeader>
+                  <form onSubmit={async (e) => {
+                    e.preventDefault();
+                    if (!user || !app) return;
+                    setCreating(true);
+                    try {
+                      const fb = await feedbackEventsRepo.create({
+                        entity_type: "application",
+                        entity_id: app.id,
+                        comment: newFeedbackComment,
+                        sentiment: newFeedbackSentiment,
+                        tenant_id: app.tenant_id,
+                        created_by: user.id,
+                        metadata: {},
+                      } as any);
+                      setFeedback((prev) => [fb, ...prev]);
+                      setNewFeedbackComment("");
+                      setNewFeedbackSentiment("neutral");
+                      setFeedbackDialogOpen(false);
+                      toast.success("Feedback registrado");
+                    } catch {
+                      toast.error("Error registrando feedback");
+                    } finally {
+                      setCreating(false);
+                    }
+                  }} className="space-y-4 mt-2">
+                    <div className="space-y-2">
+                      <Label>Sentiment</Label>
+                      <Select value={newFeedbackSentiment} onValueChange={setNewFeedbackSentiment}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="positive">Positivo</SelectItem>
+                          <SelectItem value="neutral">Neutral</SelectItem>
+                          <SelectItem value="negative">Negativo</SelectItem>
+                          <SelectItem value="mixed">Mixto</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-2">
+                      <Label>Comentario</Label>
+                      <Textarea value={newFeedbackComment} onChange={(e) => setNewFeedbackComment(e.target.value)} rows={3} placeholder="Describe el feedback..." />
+                    </div>
+                    <Button type="submit" className="w-full" disabled={creating}>
+                      {creating ? "Registrando..." : "Registrar Feedback"}
+                    </Button>
+                  </form>
+                </DialogContent>
+              </Dialog>
+            </div>
             {feedback.length === 0 ? (
               <EmptyState icon={MessageSquare} message="No hay feedback para esta aplicación." />
             ) : (
