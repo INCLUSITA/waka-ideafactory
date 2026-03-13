@@ -124,9 +124,15 @@ export default function ApplicationDetailPage() {
         setAssets(allAssets.filter((a) => a.application_id === id));
         setPatterns(allPatterns.filter((p) => p.application_id === id));
         setFeedback(allFeedback.filter((f) => f.entity_type === "application" && f.entity_id === id));
-        setAudit(allAudit.filter((a) => (a.entity_type === "applications" && a.entity_id === id) ||
-          (a.entity_type === "workspace_records" && allRecords.some(r => r.id === a.entity_id && r.application_id === id)) ||
-          (a.entity_type === "assets" && allAssets.some(as => as.id === a.entity_id && as.application_id === id))
+        const appRecordIds = new Set(allRecords.filter(r => r.application_id === id).map(r => r.id));
+        const appAssetIds = new Set(allAssets.filter(a => a.application_id === id).map(a => a.id));
+        const appPatternIds = new Set(allPatterns.filter(p => p.application_id === id).map(p => p.id));
+        setAudit(allAudit.filter((a) =>
+          (a.entity_type === "applications" && a.entity_id === id) ||
+          (a.entity_type === "workspace_records" && appRecordIds.has(a.entity_id)) ||
+          (a.entity_type === "assets" && appAssetIds.has(a.entity_id)) ||
+          (a.entity_type === "pattern_docs" && appPatternIds.has(a.entity_id)) ||
+          (a.entity_type === "feedback_events" && allFeedback.some(f => f.id === a.entity_id && f.entity_type === "application" && f.entity_id === id))
         ));
       })
       .catch(() => toast.error("Error cargando aplicación"))
