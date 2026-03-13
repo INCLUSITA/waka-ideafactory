@@ -106,9 +106,9 @@ export default function ApplicationDetailPage() {
   const [newFeedbackComment, setNewFeedbackComment] = useState("");
   const [newFeedbackSentiment, setNewFeedbackSentiment] = useState("neutral");
 
-  const loadData = () => {
+  const loadData = (showLoader = false) => {
     if (!id) return;
-    setLoading(true);
+    if (showLoader) setLoading(true);
 
     Promise.all([
       applicationsRepo.findById(id),
